@@ -1,4 +1,4 @@
-var azureSearchQueryKey = "";
+var azureSearchQueryKey = "[SearchServiceQueryKey]";
 var inSearch= false;
 var q = "*";
 // Test Gallery

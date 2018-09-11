@@ -87,6 +87,7 @@
     <None Include="json\contact10.json" />
     <None Include="json\contact11.json" />
     <None Include="json\contact12.json" />
+    <None Include="json\contact13.json" />
     <None Include="json\contact2.json" />
     <None Include="json\contact3.json" />
     <None Include="json\contact4.json" />

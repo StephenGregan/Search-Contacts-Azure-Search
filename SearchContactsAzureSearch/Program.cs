@@ -110,8 +110,8 @@ namespace SearchContactsAzureSearch
                         // contactsTypes Array [1] 
                         new Field("contactTypes", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
 
-                        new Field("accountingReference", DataType.String) { IsKey = true, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
-                        new Field("referenceId", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("accountingReference", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("referenceId", DataType.String) { IsKey = true, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // languageMappings Array [2] 
                         new Field("languageMappings", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
@@ -230,7 +230,7 @@ namespace SearchContactsAzureSearch
             // Scan the JSON files from Interpreter Intelligence contacts and upload them to Azure Search.
             var indexOperations = new List<IndexAction>();
 
-            string[] files = Directory.GetFiles(@"[SpecifyThePath]", "*.json", SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(@"C:\Users\Ronan\source\repos\SearchContactsAzureSearch\SearchContactsAzureSearch\json", "*.json", SearchOption.AllDirectories);
             int totalCounter = 0;
 
             try
@@ -272,7 +272,7 @@ namespace SearchContactsAzureSearch
                         doc.Add("versionValue", array["versionValue"] == null ? -1 : array["versionValue"].Value);
                         doc.Add("uuid", array["uuid"] == null ? "" : array["uuid"].Value);
                         doc.Add("createdBy", array["createdBy"] == null ? "" : array["createdBy"].Value);
-                        doc.Add("createdDate", array["createDate"] == null ? "" : array["createdDate"].Value);
+                        doc.Add("createdDate", array["createdDate"] == null ? "" : array["createdDate"].Value);
                         doc.Add("lastModifiedBy", array["lastModifiedBy"] == null ? "" : array["lastModifiedBy"].Value);
                         doc.Add("lastModifiedDate", array["lastModifiedDate"] == null ? "" : array["lastModifiedDate"].Value);
                         doc.Add("companyId", array["companyId"] == null ? -1 : array["companyId"].Value);
