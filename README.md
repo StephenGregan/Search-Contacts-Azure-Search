@@ -1,1 +1,1 @@
-![](Users\Ronan\source\repos\SearchContactsAzureSearch\contact.png)
+![](Users\Ronan\source\repos\SearchContactsAzureSearch\images\contact.png)
