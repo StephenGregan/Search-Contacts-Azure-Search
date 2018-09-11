@@ -78,11 +78,23 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="iicontacts\interpreterintelligencecontacts1.json" />
+    <None Include="iicontacts\interpreterintelligencecontacts2.json" />
+    <None Include="iicontacts\interpreterintelligencecontacts3.json" />
+    <None Include="iicontacts\interpreterintelligencecontacts4.json" />
+    <None Include="iicontacts\interpreterintelligencecontacts5.json" />
     <None Include="json\contact1.json" />
+    <None Include="json\contact10.json" />
+    <None Include="json\contact11.json" />
+    <None Include="json\contact12.json" />
     <None Include="json\contact2.json" />
     <None Include="json\contact3.json" />
     <None Include="json\contact4.json" />
     <None Include="json\contact5.json" />
+    <None Include="json\contact6.json" />
+    <None Include="json\contact7.json" />
+    <None Include="json\contact8.json" />
+    <None Include="json\contact9.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

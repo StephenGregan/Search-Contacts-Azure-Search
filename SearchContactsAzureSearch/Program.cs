@@ -2,6 +2,7 @@
 using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,9 +15,9 @@ namespace SearchContactsAzureSearch
     class Program
     {
         #region Variables
-        private static string searchServiceName = "";
-        private static string searchServiceApiKey = "";
-        private static string AzureSearchIndex = "";
+        private static string searchServiceName = "[SearchServiceName]";
+        private static string searchServiceApiKey = "[SearchServiceApiKey]";
+        private static string azureSearchIndex = "[IndexName]";
         private static SearchServiceClient _searchServiceClient;
         private static SearchIndexClient _searchIndexClient;
         #endregion
@@ -26,12 +27,12 @@ namespace SearchContactsAzureSearch
         {
             // Create an HTTP reference to the catalog index.
             _searchServiceClient = new SearchServiceClient(searchServiceName, new SearchCredentials(searchServiceApiKey));
-            _searchIndexClient = (SearchIndexClient)_searchServiceClient.Indexes.GetClient(AzureSearchIndex);
+            _searchIndexClient = (SearchIndexClient)_searchServiceClient.Indexes.GetClient(azureSearchIndex);
 
-            Console.WriteLine("{0}, Deleting index...\n", AzureSearchIndex);
+            Console.WriteLine("{0}, Deleting index...\n", azureSearchIndex);
             DeleteIndex();
 
-            Console.WriteLine("{0}, Creating Index...\n", AzureSearchIndex);
+            Console.WriteLine("{0}, Creating Index...\n", azureSearchIndex);
 
             if (CreateIndex() == false)
             {
@@ -39,7 +40,7 @@ namespace SearchContactsAzureSearch
                 return;
             }
 
-            Console.WriteLine("{0}, Uploading content...\n", AzureSearchIndex);
+            Console.WriteLine("{0}, Uploading content...\n", azureSearchIndex);
             UploadContent();
 
             Console.WriteLine("\nPress any key to continue\n");
@@ -53,7 +54,7 @@ namespace SearchContactsAzureSearch
             // Delete the index, datasource and indexer.
             try
             {
-                _searchServiceClient.Indexes.Delete(AzureSearchIndex);
+                _searchServiceClient.Indexes.Delete(azureSearchIndex);
             }
             catch (Exception ex)
             {
@@ -73,141 +74,143 @@ namespace SearchContactsAzureSearch
             {
                 "*"
             };
+
             cors.AllowedOrigins = origins;
+            cors.MaxAgeInSeconds = 300;
 
             try
             {
                 var definition = new Index
                 {
-                    Name = AzureSearchIndex,
+                    Name = azureSearchIndex,
                     CorsOptions = cors,
                     Fields = new[]
                     {
                         #region Fields
-                        new Field("id", DataType.Int32) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("versionValue", DataType.Int32) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("uuid", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("createdBy", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("createdDate", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("lastModifiedBy", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("lastModifiedDate", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("company_id", DataType.Int32) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("name", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("displayName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("salutation", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("firstName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("middleName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("lastName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("nickName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("suffix", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("gender_id", DataType.Int32) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("businessUnit_id", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("dateOfBirth", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("id", DataType.Int32) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("versionValue", DataType.Int32) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("uuid", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("createdBy", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("createdDate", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("lastModifiedBy", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("lastModifiedDate", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("companyId", DataType.Int32) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("name", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("displayName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("salutation", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("firstName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("middleName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("lastName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("nickName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("suffix", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("genderId", DataType.Int32) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("businessUnitId", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("dateOfBirth", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // contactsTypes Array [1] 
-                        new Field("contactTypes", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("contactTypes", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
 
-                        new Field("accountingReference", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("referenceId", DataType.String) { IsKey = true, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("accountingReference", DataType.String) { IsKey = true, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("referenceId", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // languageMappings Array [2] 
-                        new Field("languageMappings", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("languageMappings", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
 
-                        new Field("rating", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("primaryNumber", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("rating", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("primaryNumber", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // Numbers Array [3] 
-                        new Field("numbers", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        //new Field("primaryAddress", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("numbers", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
+                        //new Field("primaryAddress", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // Testing GeographyPoint for 'lat' and 'lng' 
-                        // new Field("lat", DataType.GeographyPoint) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        // new Field("lng", DataType.GeographyPoint) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        // new Field("lat", DataType.GeographyPoint) { IsKey = false, IsFacetable = false, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        // new Field("lng", DataType.GeographyPoint) { IsKey = false, IsFacetable = false, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
 
                         // Addresses Array [4] 
-                        new Field("addresses", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        //new Field("primaryEmail", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("addresses", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
+                        //new Field("primaryEmail", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // Emails Array [5]
-                        new Field("emails", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("emails", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
 
                         // Qualifications Array [6]
-                        new Field("qualifications", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("qualifications", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
 
                         // Eligibilties Array [7]
-                        new Field("eligibilities", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("eligibilities", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
 
                         // CriteriaHierarchy Array [8]
-                        new Field("criteriaHierarchy", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("criteriaHierarchy", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
 
-                        new Field("hasTransportation", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("hasChildren", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("notes", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("companyName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("website", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("region", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("countryOfOrigin", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("countryOfResidence", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("countryOfNationality", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("active", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("activeNote", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("availability", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("experience", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("registeredTaxId", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("bankAccount", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("sortCode", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("iban", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("swift", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("eftId", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("eftName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("paymentMethodId", DataType.Int32) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("paymentMethodName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("paymentAccount", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("registeredTax", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("registeredTaxIdDescription", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("employmentCategoryId", DataType.Int32) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("assignmentTierId", DataType.Int32) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("timeZone", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("ethnicity", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("hasTransportation", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("hasChildren", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("notes", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("companyName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("website", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("region", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("countryOfOrigin", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("countryOfResidence", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("countryOfNationality", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("active", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("activeNote", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("availability", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("experience", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("registeredTaxId", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("bankAccount", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("sortCode", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("iban", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("swift", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("eftId", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("eftName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("paymentMethodId", DataType.Int32) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("paymentMethodName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("paymentAccount", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("registeredTax", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("registeredTaxIdDescription", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("employmentCategoryId", DataType.Int32) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("assignmentTierId", DataType.Int32) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("timeZone", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("ethnicity", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // Document Object
-                        //new Field("document", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        //new Field("document", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
-                        new Field("imagePath", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("outOfOffice", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("disableUpcomingReminder", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("disableCloseReminder", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("disableConfirmReminder", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("bankAccountDescription", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("timeWorked", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("activationDate", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("originalStartDate", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("datePhotoSentToPrinter", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("datePhotoSentToInterpreter", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("inductionDate", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("reActivationDate", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("iolNrcpdNumber", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("referralSource", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("refereeSourceName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("recruiterName", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("taleoId", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("bankAccountReference", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("imagePath", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("outOfOffice", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("disableUpcomingReminder", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("disableCloseReminder", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("disableConfirmReminder", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("bankAccountDescription", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("timeWorked", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("activationDate", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("originalStartDate", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("datePhotoSentToPrinter", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("datePhotoSentToInterpreter", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("inductionDate", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("reActivationDate", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("iolNrcpdNumber", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("referralSource", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("refereeSourceName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("recruiterName", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("taleoId", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("bankAccountReference", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // Status Object
-                        //new Field("status", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        //new Field("status", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
-                        new Field("disableConfirmationEmails", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("disableOfferEmails", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("disableAutoOffers", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("currencyCodeId", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("currencySymbol", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("bankBranch", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
+                        new Field("disableConfirmationEmails", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("disableOfferEmails", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("disableAutoOffers", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("currencyCodeId", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("currencySymbol", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
+                        new Field("bankBranch", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true },
 
                         // Services Array [9]
-                        new Field("services", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("enableAllServices", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("isSynchronized", DataType.Boolean) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false },
-                        new Field("lastSynchronizedDate", DataType.String) { IsKey = false, IsFacetable = false, IsFilterable = false, IsRetrievable = true, IsSearchable = false, IsSortable = false }
+                        new Field("services", DataType.Collection(DataType.String)) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = false },
+                        new Field("enableAllServices", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("isSynchronized", DataType.Boolean) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = false, IsSortable = true },
+                        new Field("lastSynchronizedDate", DataType.String) { IsKey = false, IsFacetable = true, IsFilterable = true, IsRetrievable = true, IsSearchable = true, IsSortable = true }
                         #endregion
                     }
                 };
@@ -224,10 +227,10 @@ namespace SearchContactsAzureSearch
 
         private static void UploadContent()
         {
-            // Scan the JSON files from the Interpreter Intelligence contacts and upload them to Azure Search.
+            // Scan the JSON files from Interpreter Intelligence contacts and upload them to Azure Search.
             var indexOperations = new List<IndexAction>();
 
-            string[] files = Directory.GetFiles(@"C:\Users\Ronan\source\repos\ArtGallery\ArtGallery\bin\Debug\json", "stephengregan.json", SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(@"[SpecifyThePath]", "*.json", SearchOption.AllDirectories);
             int totalCounter = 0;
 
             try
@@ -243,6 +246,8 @@ namespace SearchContactsAzureSearch
 
                         dynamic array = JsonConvert.DeserializeObject(json);
 
+                        #region Testing
+                        // Used for testing purposes
                         // Echovoice.JSON NuGet package
 
                         //string input = "[14,4,[14,\"data\"],[[5,\"10.186.122.15\"],[6,\"10.186.122.16\"]]]";
@@ -257,102 +262,216 @@ namespace SearchContactsAzureSearch
                         //    // Print it out
                         //    Console.WriteLine(s);
                         //}
+                        #endregion
 
-                        doc.Add("id", array["id"].Value);
-                        doc.Add("versionValue", array["versionValue"].Value);
-                        doc.Add("uuid", array["uuid"].Value);
-                        doc.Add("createdBy", array["createdBy"].Value);
-                        doc.Add("createdDate", array["createdDate"].Value);
-                        doc.Add("lastModifiedBy", array["lastModifiedBy"].Value);
-                        doc.Add("lastModifiedDate", array["lastModifiedDate"].Value);
-                        doc.Add("company_id", array["company_id"] == null ? -1 : array["company_id"].Value);
-                        doc.Add("name", array["name"].Value);
-                        doc.Add("displayName", array["displayName"].Value);
-                        doc.Add("salutation", array["salutation"].Value);
-                        doc.Add("firstName", array["firstName"].Value);
-                        doc.Add("middleName", array["middleName"].Value);
-                        doc.Add("lastName", array["lastName"].Value);
-                        doc.Add("nickName", array["nickName"].Value);
-                        doc.Add("suffix", array["suffix"].Value);
-                        doc.Add("gender_id", array["gender_id"] == null ? -1 : array["gender_id"].Value);
-                        doc.Add("businessUnit_id", array["businessUnit_id"] == null ? "" : array["businessUnit_id"].Value);
-                        doc.Add("dateOfBirth", array["dateOfBirth"].Value);
+                        // You can write the code like this doc.Add("uuid", array["uuid"].Value); if you know that the field 'uuid' in your
+                        // json will not have a null value.  If the json does have a null value for 'uuid' you must write the code like this:
+                        // doc.Add("uuid", array["uuid"] == null ? "" : array["uuid"].Value);.  This will add "" to all the documents where uuid
+                        // is null.
+                        doc.Add("id", array["id"] == null ? -1 : array["id"].Value);
+                        doc.Add("versionValue", array["versionValue"] == null ? -1 : array["versionValue"].Value);
+                        doc.Add("uuid", array["uuid"] == null ? "" : array["uuid"].Value);
+                        doc.Add("createdBy", array["createdBy"] == null ? "" : array["createdBy"].Value);
+                        doc.Add("createdDate", array["createDate"] == null ? "" : array["createdDate"].Value);
+                        doc.Add("lastModifiedBy", array["lastModifiedBy"] == null ? "" : array["lastModifiedBy"].Value);
+                        doc.Add("lastModifiedDate", array["lastModifiedDate"] == null ? "" : array["lastModifiedDate"].Value);
+                        doc.Add("companyId", array["companyId"] == null ? -1 : array["companyId"].Value);
+                        doc.Add("name", array["name"] == null ? "" : array["name"].Value);
+                        doc.Add("displayName", array["displayName"] == null ? "" : array["displayName"].Value);
+                        doc.Add("salutation", array["salutation"] == null ? "" : array["salutation"].Value);
+                        doc.Add("firstName", array["firstName"] == null ? "" : array["firstName"].Value);
+                        doc.Add("middleName", array["middleName"] == null ? "" : array["middleName"].Value);
+                        doc.Add("lastName", array["lastName"] == null ? "" : array["lastName"].Value);
+                        doc.Add("nickName", array["nickName"] == null ? "" : array["nickName"].Value);
+                        doc.Add("suffix", array["suffix"] == null ? "" : array["suffix"].Value);
+                        doc.Add("genderId", array["genderId"] == null ? -1 : array["genderId"].Value);
+                        doc.Add("businessUnitId", array["businessUnitId"] == null ? "" : array["businessUnitId"].Value);
+                        doc.Add("dateOfBirth", array["dateOfBirth"] == null ? "" : array["dateOfBirth"].Value);
 
                         // ContactTypes Array [1]
-                        //doc.Add("contactTypes", array["contactTypes"]);
+                        if (array["contactTypes"] != null)
+                        {
+                            JArray contactTypesArray = array["contactTypes"];
+                            List<string> contactTypesList = new List<string>();
+                            if (contactTypesArray != null)
+                            {
+                                foreach (var item in contactTypesArray)
+                                {
+                                    contactTypesList.Add(item.ToString());
+                                }
+                            }
 
-                        doc.Add("accountingReference", array["accountingReference"].Value);
-                        doc.Add("referenceId", array["referenceId"].Value);
+                            doc.Add("contactTypes", contactTypesList);
+                        }
+
+                        doc.Add("accountingReference", array["accountingReference"] == null ? "" : array["accountingReference"].Value);
+                        doc.Add("referenceId", array["referenceId"] == null ? "" : array["referenceId"].Value);
 
                         // LanguageMappings Array [2]
-                        //doc.Add("languageMappings", array["languageMappings"]);
+                        if (array["languageMappings"] != null)
+                        {
+                            JArray languageMappingsArray = array["languageMappings"];
+                            List<string> languageMappingsList = new List<string>();
+                            if (languageMappingsArray != null)
+                            {
+                                foreach (var item in languageMappingsArray)
+                                {
+                                    languageMappingsList.Add(item.ToString());
+                                }
+                            }
+
+                            doc.Add("languageMappings", languageMappingsList);
+                        }
 
                         doc.Add("rating", array["rating"] == null ? "" : array["rating"].Value);
+
+                        // Object
                         //doc.Add("primaryNumber", array["primaryNumber"] == null ? "" : array["primaryNumber"].Value);
 
                         // Numbers Array [3]
-                        //doc.Add("numbers", array["numbers"]);
+                        if (array["numbers"] != null)
+                        {
+                            JArray numbersArray = array["numbers"];
+                            List<string> numbersList = new List<string>();
+                            if (numbersArray != null)
+                            {
+                                foreach (var item in numbersArray)
+                                {
+                                    numbersList.Add(item.ToString());
+                                }
+                            }
+
+                            doc.Add("numbers", numbersList);
+                        }
+                        // Object
                         //doc.Add("primaryAddress", array["primaryAddress"]);
 
                         // Testing GeographyPoint for 'lat' and 'lng' 
-                        // doc.Add("lat", array["lat"]);
-                        // doc.Add("lng", array["lng"]);
+                        // doc.Add("lat", array["lat"].Value);
+                        // doc.Add("lng", array["lng"].Value);
 
                         // Addresses Array [4]
-                        //doc.Add("addresses", array["addresses"]);
+                        if (array["addresses"] != null)
+                        {
+                            JArray addressesArray = array["addresses"];
+                            List<string> addressesList = new List<string>();
+                            if (addressesArray != null)
+                            {
+                                foreach (var item in addressesArray)
+                                {
+                                    addressesList.Add(item.ToString());
+                                }
+                            }
+
+                            doc.Add("addresses", addressesList);
+                        }
+
+                        // Object
                         //doc.Add("primaryEmail", array["primaryEmail"]);
 
                         // Emails Array [5]
-                        //doc.Add("emails", array["emails"]);
+                        if (array["emails"] != null)
+                        {
+                            JArray emailsArray = array["emails"];
+                            List<string> emailsList = new List<string>();
+                            if (emailsArray != null)
+                            {
+                                foreach (var item in emailsArray)
+                                {
+                                    emailsList.Add(item.ToString());
+                                }
+                            }
+
+                            doc.Add("emails", emailsList);
+                        }
 
                         // Qualifications Array [6]
-                        //doc.Add("qualifications", array["qualifications"]);
+                        if (array["qualifications"] != null)
+                        {
+                            JArray qualificationsArray = array["qualifications"];
+                            List<string> qualificationsList = new List<string>();
+                            if (qualificationsArray != null)
+                            {
+                                foreach (var item in qualificationsArray)
+                                {
+                                    qualificationsList.Add(item.ToString());
+                                }
+                            }
+
+                            doc.Add("qualifications", qualificationsList);
+                        }
 
                         // Eligibilities Array [7]
-                        //doc.Add("eligibilities", array["eligibilities"]);
+                        if (array["eligibilities"] != null)
+                        {
+                            JArray eligibilitesArray = array["eligibilities"];
+                            List<string> eligibilitiesList = new List<string>();
+                            if (eligibilitesArray != null)
+                            {
+                                foreach (var item in eligibilitesArray)
+                                {
+                                    eligibilitiesList.Add(item.ToString());
+                                }
+                            }
+
+                            doc.Add("eligibilities", eligibilitiesList);
+                        }
 
                         // CriteriaHierarchy Array [8]
-                        //doc.Add("criteriaHierarchy", array["criteriaHierarchy"]);
+                        if (array["criteriaHierarchy"] != null)
+                        {
+                            JArray criteriaHierarchyArray = array["criteriaHierarchy"];
+                            List<dynamic> criteriaHierarchyList = new List<dynamic>();
+                            if (criteriaHierarchyArray != null)
+                            {
+                                foreach (var item in criteriaHierarchyArray)
+                                {
+                                    criteriaHierarchyList.Add(item);
+                                }
+                            }
+
+                            doc.Add("criteriaHierarchy", criteriaHierarchyList);
+                        }
 
                         doc.Add("hasTransportation", array["hasTransportation"] == null ? false : array["hasTransportation"].Value);
                         doc.Add("hasChildren", array["hasChildren"] == null ? false : array["hasChildren"].Value);
-                        doc.Add("notes", array["notes"].Value);
-                        doc.Add("companyName", array["companyName"].Value);
-                        doc.Add("website", array["website"].Value);
-                        doc.Add("region", array["region"].Value);
-                        doc.Add("countryOfOrigin", array["countryOfOrigin"].Value);
-                        doc.Add("countryOfResidence", array["countryOfResidence"].Value);
-                        doc.Add("countryOfNationality", array["countryOfNationality"].Value);
+                        doc.Add("notes", array["notes"] == null ? "" : array["notes"].Value);
+                        doc.Add("companyName", array["comanyName"] == null ? "" : array["companyName"].Value);
+                        doc.Add("website", array["website"] == null ? "" : array["website"].Value);
+                        doc.Add("region", array["region"] == null ? "" : array["region"].Value);
+                        doc.Add("countryOfOrigin", array["countryOfOrigin"] == null ? "" : array["countryOfOrigin"].Value);
+                        doc.Add("countryOfResidence", array["countryOfResidence"] == null ? "" : array["countryOfResidence"].Value);
+                        doc.Add("countryOfNationality", array["countryOfNationality"] == null ? "" : array["countryOfNationality"].Value);
                         doc.Add("active", array["active"] == null ? false : array["active"].Value);
-                        doc.Add("activeNote", array["activeNote"].Value);
-                        doc.Add("availability", array["availability"].Value);
-                        doc.Add("experience", array["experience"].Value);
-                        doc.Add("registeredTaxId", array["registeredTaxId"].Value);
-                        doc.Add("bankAccount", array["bankAccount"].Value);
-                        doc.Add("sortCode", array["sortCode"].Value);
-                        doc.Add("iban", array["iban"].Value);
-                        doc.Add("swift", array["swift"].Value);
+                        doc.Add("activeNote", array["activeNote"] == null ? "" : array["activeNote"].Value);
+                        doc.Add("availability", array["availability"] == null ? "" : array["availability"].Value);
+                        doc.Add("experience", array["experience"] == null ? "" : array["experience"].Value);
+                        doc.Add("registeredTaxId", array["registeredTaxId"] == null ? "" : array["registeredTaxId"].Value);
+                        doc.Add("bankAccount", array["bankAccount"] == null ? "" : array["bankAccount"].Value);
+                        doc.Add("sortCode", array["sortCode"] == null ? "" : array["sortCode"].Value);
+                        doc.Add("iban", array["iban"] == null ? "" : array["iban"].Value);
+                        doc.Add("swift", array["swift"] == null ? "" : array["swift"].Value);
                         doc.Add("eftId", array["eftId"] == null ? "" : array["eftId"].Value);
                         doc.Add("eftName", array["eftName"] == null ? "" : array["eftName"].Value);
-                        doc.Add("paymentMethodId", array["paymentMethodId"].Value);
-                        doc.Add("paymentMethodName", array["paymentMethodName"].Value);
+                        doc.Add("paymentMethodId", array["paymentMethodId"] == null ? -1 : array["paymentMethodId"].Value);
+                        doc.Add("paymentMethodName", array["paymentMethodName"] == null ?  "" : array["paymentMethodName"].Value);
                         doc.Add("paymentAccount", array["paymentAccount"] == null ? "" : array["paymentAccount"].Value);
                         doc.Add("registeredTax", array["registeredTax"] == null ? false : array["registeredTax"].Value);
-                        doc.Add("registeredTaxIdDescription", array["registeredTaxIdDescription"].Value);
-                        doc.Add("employmentCategoryId", array["employmentCategoryId"].Value);
-                        doc.Add("assignmentTierId", array["assignmentTierId"].Value);
-                        doc.Add("timeZone", array["timeZone"].Value);
-                        doc.Add("ethnicity", array["ethnicity"].Value);
+                        doc.Add("registeredTaxIdDescription", array["registeredTaxIdDescription"] == null ? "" : array["registeredTaxIdDescription"].Value);
+                        doc.Add("employmentCategoryId", array["employmentCategoryId"] == null ? -1 : array["employmentCategoryId"].Value);
+                        doc.Add("assignmentTierId", array["assignmentTierId"] == null ? -1 : array["assignmentTierId"].Value);
+                        doc.Add("timeZone", array["timeZone"] == null ? "" : array["timeZone"].Value);
+                        doc.Add("ethnicity", array["ethnicity"] == null ? "" : array["ethnicity"].Value);
 
                         //doc.Add("document", array["document"]);
 
-                        doc.Add("imagePath", array["imagePath"].Value);
+                        doc.Add("imagePath", array["imagePath"] == null ? "" : array["imagePath"].Value);
                         doc.Add("outOfOffice", array["outOfOffice"] == null ? false : array["outOfOffice"].Value);
                         doc.Add("disableUpcomingReminder", array["disableUpcomingReminder"] == null ? false : array["disableUpcomingReminder"].Value);
                         doc.Add("disableCloseReminder", array["disableCloseReminder"] == null ? false : array["disableCloseReminder"].Value);
                         doc.Add("disableConfirmReminder", array["disableConfirmReminder"] == null ? false : array["disableConfirmReminder"].Value);
                         doc.Add("bankAccountDescription", array["bankAccountDescription"] == null ? "" : array["bankAccountDescription"].Value);
-                        doc.Add("timeWorked", array["timeWorked"].Value);
+                        doc.Add("timeWorked", array["timeWorked"] == null ? "" : array["timeWorked"].Value);
                         doc.Add("activationDate", array["activationDate"] == null ? "" : array["activationDate"].Value);
                         doc.Add("originalStartDate", array["originalStartDate"] == null ? "" : array["originalStartDate"].Value);
                         doc.Add("datePhotoSentToPrinter", array["datePhotoSentToPrinter"] == null ? "" : array["datePhotoSentToPrinter"].Value);
@@ -371,134 +490,29 @@ namespace SearchContactsAzureSearch
                         doc.Add("disableConfirmationEmails", array["disableConfirmationEmails"] == null ? false : array["disableConfirmationEmails"].Value);
                         doc.Add("disableOfferEmails", array["disableOfferEmails"] == null ? false : array["disableOfferEmails"].Value);
                         doc.Add("disableAutoOffers", array["disableAutoOffers"] == null ? false : array["disableAutoOffers"].Value);
-                        doc.Add("currencyCodeId", array["currencyCodeId"].Value);
+                        doc.Add("currencyCodeId", array["currencyCodeId"] == null ? "" : array["currencyCodeId"].Value);
                         doc.Add("currencySymbol", array["currencySymbol"] == null ? "" : array["currencySymbol"].Value);
                         doc.Add("bankBranch", array["bankBranch"] == null ? "" : array["bankBranch"].Value);
 
                         // Services Array [9]
-                        //doc.Add("services", array["services"]);
+                        if (array["services"] != null)
+                        {
+                            JArray servicesArray = array["services"];
+                            List<string> servicesList = new List<string>();
+                            if (servicesArray != null)
+                            {
+                                foreach (var item in servicesArray)
+                                {
+                                    servicesList.Add(item.ToString());
+                                }
+                            }
+
+                            doc.Add("services", servicesList);
+                        }
 
                         doc.Add("enableAllServices", array["enableAllServices"] == null ? false : array["enableAllServices"].Value);
                         doc.Add("isSynchronized", array["isSynchronized"] == null ? false : array["isSynchronized"].Value);
                         doc.Add("lastSynchronizedDate", array["lastSynchronizedDate"] == null ? "" : array["lastSynchronizedDate"].Value);
-
-                        // Parsing the Array's in the JSON
-                        // ContactTypes Array [1]
-                        if (array["contactTypes"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["contactTypes"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("contactTypes", contributorList);
-                        }
-
-                        // LanguageMappings Array [2]
-                        if (array["languageMappings"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["languageMappings"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("languageMappings", contributorList);
-                        }
-
-                        // Numbers Array [3]
-                        if (array["numbers"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["numbers"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("numbers", contributorList);
-                        }
-
-                        // Addresses Array [4]
-                        if (array["addresses"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["addresses"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("addresses", contributorList);
-                        }
-
-                        // Emails Array [5]
-                        if (array["emails"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["emails"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("emails", contributorList);
-                        }
-
-                        // Qualifications Array [6]
-                        if (array["qualifications"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["qualifications"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("qualifications", contributorList);
-                        }
-
-                        // Eligibilitites Array [7]
-                        if (array["eligibilities"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["eligibilities"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("eligibilities", contributorList);
-                        }
-
-                        // CriteriaHierarchy Array [8]
-                        if (array["criteriaHierarchy"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["criteriaHierarchy"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("criteriaHierarchy", contributorList);
-                        }
-
-                        // Services Array [9]
-                        if (array["services"] == null)
-                        {
-                            List<string> contributorList = new List<string>();
-
-                            foreach (var item in array["services"])
-                            {
-                                contributorList.Add(((string)item["fc"]));
-                            }
-
-                            doc.Add("services", contributorList);
-                        }
                         #endregion
 
                         indexOperations.Add(IndexAction.Upload(doc));
