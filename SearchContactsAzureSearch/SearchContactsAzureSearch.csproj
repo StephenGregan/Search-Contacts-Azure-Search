@@ -82,7 +82,6 @@
     <None Include="iicontacts\interpreterintelligencecontacts2.json" />
     <None Include="iicontacts\interpreterintelligencecontacts3.json" />
     <None Include="iicontacts\interpreterintelligencecontacts4.json" />
-    <None Include="iicontacts\interpreterintelligencecontacts5.json" />
     <None Include="json\contact1.json" />
     <None Include="json\contact10.json" />
     <None Include="json\contact11.json" />
