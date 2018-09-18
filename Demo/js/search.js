@@ -4,8 +4,6 @@ var q = "*";
 var activeFacet = '';
 var lastModifiedByFacet = '';
 var createdByFacet = '';
-//var eligibilitiesFacet = '';
-//var createdByFacet = '';
 var currentPage = 1;
 
 function execSearch()
@@ -24,14 +22,9 @@ function execSearch()
 
 		if(activeFacet > 0)
 			searchQuery += '&$filter=active/any(t: t eq \'' + encodeURIComponent(activeFacet) + '\')';
-
-		// if(eligibilitiesFacet > 0)
-		// 	searchQuery += '&$filter=eligibilities/any(t: t eq \'' + encodeURIComponent(eligibilitiesFacet) + '\')';
-
 		
 		if(createdByFacet > 0)
 			searchQuery += '&$filter=createdBy/any(t: t eq \'' + encodeURIComponent(createdByFacet) + '\')';
-
 
 		var searchAPI = "https://ronansearch.search.windows.net/indexes/index/docs?$skip=" + (currentPage-1).toString() + "&$top=5&$select=imagePath,displayName,id"
 				searchAPI += ",uuid,createdBy,createdDate,lastModifiedBy,lastModifiedDate,firstName,active,middleName,lastName,accountingReference,countryOfOrigin,"
@@ -58,7 +51,6 @@ function execSearch()
 				$("#createdByContainer").html('');
 
 				for (var item in data.value) {
-
 						var id = data.value[item].id;
 						var uuid = data.value[item].uuid;
 						var versionValue = data.value[item].versionValue;
@@ -157,15 +149,6 @@ function execSearch()
 					}
 				}
 
-				// var eligibilities = '';
-				// for (var item in data["@search.facets"].eligibilities)
-				// {
-				// 	if (eligibilitiesFacet != data["@search.facets"].eligibilities[item].value) {
-				// 		$( "#eligibilitiesContainer" ).append( '<li><a href="javascript:void(0);" onclick="setEligibilitiesFacet(\'' + data["@search.facets"].eligibilities[item].value + '\');">' + data["@search.facets"].eligibilities[item].value + ' (' + data["@search.facets"].eligibilities[item].count + ')</a></li>' );
-
-				// 	}
-				// }
-
 				var lastModifiedBy = '';
 				for (var item in data["@search.facets"].lastModifiedBy)
 				{
@@ -181,7 +164,6 @@ function execSearch()
 						$( "#createdByContainer" ).append( '<li><a href="javascript:void(0);" onclick="setCreatedByFacet(\'' + data["@search.facets"].createdBy[item].value + '\');">' + data["@search.facets"].createdBy[item].value + ' (' + data["@search.facets"].createdBy[item].count + ')</a></li>' );
 					}
 				}
-
 
 				// Update Pagination
 				UpdatePagination(data["@search.count"]);
@@ -205,17 +187,6 @@ function setActiveFacet(facet)
 		$("#currentActive").html('');
 	execSearch();
 }
-
-// function setEligibilitiesFacet(facet)
-// {
-// 	// User clicked on a subject facet
-// 	eligibilitiesFacet=facet;
-// 	if (facet != '')
-// 		$("#currentEligibilities").html(facet + '<a href="javascript:void(0);" onclick="setEligibilitiesFacet(\'\');"> [X]</a>');
-// 	else
-// 		$("#currentEligibilities").html('');
-// 	execSearch();
-// }
 
 function setLastModifiedByFacet(facet)
 {
