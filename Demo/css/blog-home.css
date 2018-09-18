@@ -16,30 +16,53 @@ footer {
     background-image: linear-gradient(#ffff, #afada7);
    	left: 0;
    	bottom: 0;*/
-   /*position: fixed;*/
    left: 0;
    bottom: 0;
    width: 100%;
    background-color: red;
    color: white;
    text-align: center;
-   background-image: linear-gradient(#ffff, #afada7);
+   background-image: linear-gradient(#566d72, #868d8e);
 }
 
 .container{
-	background-image: linear-gradient(#afada7, #ffff);
+	background-image: linear-gradient(#868d8e, #566d72);
 	height: 100%;
 	width: 100%;
 }
 
 .col-md-4{
-	background-image: linear-gradient(#ffff, #afada7);
+	background-image: linear-gradient(#566d72, #868d8e);
 }
 
 .row{
-	background-image: linear-gradient(#afada7, #ffff);
+	background-image: linear-gradient(#868d8e, #566d72);
 }
 .media-container{
 	height: 100%;
 	width: 100%;
+}
+
+.navbar.header{
+	color: black;
+}
+
+p{
+	color: white;
+}
+
+h2{
+	color: pink;
+}
+
+b{
+	color: white;
+}
+
+data{
+	color: white;
+}
+
+a{
+	color: white;
 }

@@ -1,10 +1,11 @@
 var azureSearchQueryKey = "[SearchServiceQueryKey]";
 var inSearch= false;
 var q = "*";
-// Test Gallery
-var subjectFacet = "";
-// Test Gallery
-var contributorFacet = "";
+var activeFacet = '';
+var lastModifiedByFacet = '';
+var createdByFacet = '';
+//var eligibilitiesFacet = '';
+//var createdByFacet = '';
 var currentPage = 1;
 
 function execSearch()
@@ -16,11 +17,28 @@ function execSearch()
 		var searchQuery = encodeURIComponent(q);
 
 		if (q.length = 0) 
-			searchQuery = "*";
-		if (searchQuery.length == 0)
-			searchQuery = "*";
+			searchQuery = '*';
 
-		var searchAPI = "https://ronansearch.search.windows.net/indexes/index/docs?$skip=" + (currentPage-1).toString() + "&$top=10&$select=imagePath,displayName,id,createdBy,createdDate,lastModifiedBy,lastModifiedDate,firstName,active,middleName,lastName,accountingReference,countryOfOrigin,disableUpcomingReminder,disableCloseReminder,disableConfirmReminder,sortCode,iban,swift,notes,activeNote,contactTypes,languageMappings,numbers,addresses,emails,qualifications,eligibilities,criteriaHierarchy,services&api-version=2015-02-28&$count=true&search=" + searchQuery;
+		if (searchQuery.length == 0)
+			searchQuery = '*';
+
+		if(activeFacet > 0)
+			searchQuery += '&$filter=active/any(t: t eq \'' + encodeURIComponent(activeFacet) + '\')';
+
+		// if(eligibilitiesFacet > 0)
+		// 	searchQuery += '&$filter=eligibilities/any(t: t eq \'' + encodeURIComponent(eligibilitiesFacet) + '\')';
+
+		
+		if(createdByFacet > 0)
+			searchQuery += '&$filter=createdBy/any(t: t eq \'' + encodeURIComponent(createdByFacet) + '\')';
+
+
+		var searchAPI = "https://ronansearch.search.windows.net/indexes/index/docs?$skip=" + (currentPage-1).toString() + "&$top=5&$select=imagePath,displayName,id"
+				searchAPI += ",uuid,createdBy,createdDate,lastModifiedBy,lastModifiedDate,firstName,active,middleName,lastName,accountingReference,countryOfOrigin,"
+				searchAPI += "disableUpcomingReminder,disableCloseReminder,disableConfirmReminder,hasTransportation,hasChildren,companyName,website,bankAccount,"
+				searchAPI += "registeredTax,registeredTaxIdDescription,sortCode,iban,swift,notes,activeNote,contactTypes,languageMappings,numbers,addresses,emails,"
+				searchAPI += "qualifications,eligibilities,criteriaHierarchy,services,primaryNumber,primaryAddress,primaryEmail,document,status&api-version=2015-02-28"
+				searchAPI += "&highlight=displayName&$count=true&facet=active&facet=lastModifiedBy&facet=createdBy&search=" + searchQuery;
 
 		$.ajax({
 			url: searchAPI,
@@ -32,61 +50,138 @@ function execSearch()
 			},
 			type: "GET",
 			success: function (data) {
-				$("#mediaContainer").html('');
-				for (var item in data.value) {
-					var id = data.value[item].id;
-					var uuid = data.value[item].uuid;
-					var versionValue = data.value[item].versionValue;
-					var createdBy = data.value[item].createdBy;
-					var createdDate = data.value[item].createdDate;
-					var lastModifiedBy = data.value[item].lastModifiedBy;
-					var lastModifiedDate = data.value[item].lastModifiedDate;
-					var firstName = data.value[item].firstName;
-					var displayName = data.value[item].displayName;
-					var active = data.value[item].active;
-					var dateOfBirth = data.value[item].dateOfBirth;
-					var middleName = data.value[item].middleName;
-					var lastName = data.value[item].lastName;
-					var accountingReference = data.value[item].accountingReference;
-					// var rating = data.value[item].rating;
-					var countryOfOrigin = data.value[item].countryOfOrigin;
-					var bankAccount = data.value[item].bankAccount;
-					var ethnicity = data.value[item].ethnicity;
-					var disableUpcomingReminder = data.value[item].disableUpcomingReminder;
-					var disableCloseReminder = data.value[item].disableCloseReminder;
-					var disableConfirmReminder = data.value[item].disableConfirmReminder;
-					// var bankAccountDescription = data.value[item].bankAccountDescription;
-					// var iolNrcpdNumber = data.value[item].iolNrcpdNumber;
-					// var taleoId = data.value[item].taleoId;
-					var activeNote = data.value[item].activeNote;
-					var sortCode = data.value[item].sortCode;
-					var iban = data.value[item].iban;
-					var swift = data.value[item].swift;
-					var notes = data.value[item].notes;
-					var imagePath = data.value[item].imagePath;
-					var contactTypes = data.value[item].contactTypes;
-					var languageMappings = data.value[item].languageMappings;
-					var numbers = data.value[item].numbers;
-					var addresses = data.value[item].addresses;
-					var emails = data.value[item].emails;
-					var qualifications = data.value[item].qualifications;
-					var eligibilities = data.value[item].eligibilities;
-					var criteriaHierarchy = data.value[item].criteriaHierarchy;
-					var services = data.value[item].services;
-					
-					// You will get undefined for everything if you dont specify all the fields on the web page in searchApi
-					var divContent = '<div class="row"><div class="col-md-4">';
-							divContent += '<p><a href="' + imagePath + '"><img class="img-responsive" src="' + imagePath + '" alt=""></p><h2>Contact Information:</h2><p><b>Name:</b> ' + displayName + '</p><p><b>Id:</b> ' + id + '</p><p><b>Created By:</b> ' + createdBy + '</p><p><b>Created Date:</b> ' + createdDate + '</p><p><b>Last Modified By:</b> ' + lastModifiedBy + '</p>';
-							divContent += '<p><b>Last Modified Date:</b> ' + lastModifiedDate + '</p><p><b>First Name:</b> ' + firstName + '</p><p><b>Active:</b> ' + active + '</p><p><b>Middle Name:</b> ' + middleName + '</p>';
-							divContent += '<p><b>Last Name:</b> ' + lastName + '</p><p><b>accounting Reference:</b> ' + accountingReference + '</p><p><b>Country Of Origin:</b> ' + countryOfOrigin + '</p>';
-							divContent += '<p><b>disableUpcomingReminder:</b> ' + disableUpcomingReminder + '</p><p><b>disableCloseReminder:</b> ' + disableCloseReminder + '</p><p><b>disableConfirmReminder:</b> ' + disableConfirmReminder + '</p>';
-							divContent += '<p><b>Sort Code:</b> ' + sortCode + '</p><p><b>I Ban:</b> ' + iban + '</p><p><b>Swift:</b> ' + swift + '</p><p><b>Notes:</b> ' + notes + '</p><p><b>Active Note:</b> ' + activeNote + '</p><br></div>';
-							divContent += '<br><div class="col-md-8"><h2>Arrays:</h2><p><b>Contact Types:</b> ' + contactTypes + '</p><p><b>Language Mappings:</b> ' + languageMappings + '</p>';
-							divContent += '<p><b>Numbers:</b> ' + numbers + '</p><p><b>Addresses:</b> ' + addresses + '</p><p><b>Emails:</b> ' + emails + '</p><p><b>Qualifications:</b> ' + qualifications + '</p>';
-							divContent += '<p><b>Eligibilities:</b> ' + eligibilities + '</p><p><b>Criteria Hierarchy:</b> ' + criteriaHierarchy + '</p><p><b>Services:</b> ' + services + '</p></div>';
 
-					$("#mediaContainer").append(divContent);
+				$("#mediaContainer").html('');
+				$("#activeContainer").html('');
+				// $("#eligibilitiesContainer").html('');
+				$("#lastModifiedByContainer").html('');
+				$("#createdByContainer").html('');
+
+				for (var item in data.value) {
+
+						var id = data.value[item].id;
+						var uuid = data.value[item].uuid;
+						var versionValue = data.value[item].versionValue;
+						var createdBy = data.value[item].createdBy;
+						var createdDate = data.value[item].createdDate;
+						var lastModifiedBy = data.value[item].lastModifiedBy;
+						var lastModifiedDate = data.value[item].lastModifiedDate;
+						var firstName = data.value[item].firstName;
+						var displayName = data.value[item].displayName;
+						var active = data.value[item].active;
+						var dateOfBirth = data.value[item].dateOfBirth;
+						var middleName = data.value[item].middleName;
+						var lastName = data.value[item].lastName;
+						var accountingReference = data.value[item].accountingReference;
+						var countryOfOrigin = data.value[item].countryOfOrigin;
+						var bankAccount = data.value[item].bankAccount;
+						var ethnicity = data.value[item].ethnicity;
+						var disableUpcomingReminder = data.value[item].disableUpcomingReminder;
+						var disableCloseReminder = data.value[item].disableCloseReminder;
+						var disableConfirmReminder = data.value[item].disableConfirmReminder;
+						var activeNote = data.value[item].activeNote;
+						var sortCode = data.value[item].sortCode;
+						var iban = data.value[item].iban;
+						var swift = data.value[item].swift;
+						var notes = data.value[item].notes;
+						var imagePath = data.value[item].imagePath;
+						var uuid = data.value[item].uuid;
+						var hasTransportation = data.value[item].hasTransportation;
+						var hasChildren = data.value[item].hasChildren;
+						var companyName = data.value[item].companyName;
+						var website = data.value[item].website;
+						var bankAccount = data.value[item].bankAccount;
+						var registeredTax = data.value[item].registeredTax;
+						var registeredTaxIdDescription = data.value[item].registeredTaxIdDescription;
+
+						// Objects
+						var primaryNumber = data.value[item].primaryNumber;
+						var primaryAddress = data.value[item].primaryAddress;
+						var primaryEmail = data.value[item].primaryEmail;
+						var document = data.value[item].document;
+						var status = data.value[item].status;
+
+						// Arrays
+						var contactTypes = data.value[item].contactTypes;
+						var languageMappings = data.value[item].languageMappings;
+						var numbers = data.value[item].numbers;
+						var addresses = data.value[item].addresses;
+						var emails = data.value[item].emails;
+						var qualifications = data.value[item].qualifications;
+						var eligibilities = data.value[item].eligibilities;
+						var criteriaHierarchy = data.value[item].criteriaHierarchy;
+						var services = data.value[item].services;
+
+						// You will get undefined for everything if you dont specify all the fields on the web page in the searchAPI variable
+						var divContent = '<div class="row">';
+								divContent += '<div class="col-md-4">';
+								divContent += '<p><a href="' + imagePath + '"><img class="img-responsive" src="' + imagePath + '" alt=""></p>';
+								divContent += '<h2>Contact Information:</h2>';
+								divContent += '<p><b>Name:</b> ' + displayName + '</p><p><b>Id:</b> ' + id + '</p>';
+								divContent += '<p><b>Uuid:</b> ' + uuid + '</p><p><b>Created By:</b> ' + createdBy + '</p>';
+								divContent += '<p><b>Created Date:</b> ' + createdDate + '</p><p><b>Last Modified By:</b> ' + lastModifiedBy + '</p>';
+								divContent += '<p><b>Last Modified Date:</b> ' + lastModifiedDate + '</p><p><b>First Name:</b> ' + firstName + '</p>';
+								divContent += '<p><b>Active:</b> ' + active + '</p><p><b>Middle Name:</b> ' + middleName + '</p>';
+								divContent += '<p><b>Last Name:</b> ' + lastName + '</p><p><b>accounting Reference:</b> ' + accountingReference + '</p>';
+								divContent += '<p><b>Country Of Origin:</b> ' + countryOfOrigin + '</p>';
+								divContent += '<p><b>disableUpcomingReminder:</b> ' + disableUpcomingReminder + '</p>';
+								divContent += '<p><b>disableCloseReminder:</b> ' + disableCloseReminder + '</p>';
+								divContent += '<p><b>disableConfirmReminder:</b> ' + disableConfirmReminder + '</p>';
+								divContent += '<p><b>Has Transportation By:</b> ' + hasTransportation + '</p>';
+								divContent += '<p><b>Has Children:</b> ' + hasChildren + '</p><p><b>Company Name:</b> ' + companyName + '</p>';
+								divContent += '<p><b>Website:</b> ' + website + '</p>';
+								divContent += '<p><b>Bank Account:</b> ' + bankAccount + '</p><p><b>Registered Tax:</b> ' + registeredTax + '</p>';
+								divContent += '<p><b>Registered Tax Id Description:</b> ' + registeredTaxIdDescription + '</p>';
+								divContent += '<p><b>Sort Code:</b> ' + sortCode + '</p><p><b>I Ban:</b> ' + iban + '</p>';
+								divContent += '<p><b>Swift:</b> ' + swift + '</p><p><b>Notes:</b> ' + notes + '</p>';
+								divContent += '<p><b>Active Note:</b> ' + activeNote + '</p><br></div>';
+								divContent += '<br><div class="col-md-8"><h2>Arrays:</h2><p><b>Contact Types:</b> ' + contactTypes + '</p>';
+								divContent += '<p><b>Language Mappings:</b> ' + languageMappings + '</p>';
+								divContent += '<p><b>Numbers:</b> ' + numbers + '</p><p><b>Addresses:</b> ' + addresses + '</p>';
+								divContent += '<p><b>Emails:</b> ' + emails + '</p><p><b>Qualifications:</b> ' + qualifications + '</p>';
+								divContent += '<p><b>Eligibilities:</b>' + eligibilities + '</p>';
+								divContent += '<p><b>Criteria Hierarchy:</b> ' + criteriaHierarchy + '</p>';
+								divContent += '<p><b>Services:</b> ' + services + '</p><h2>Objects:</h2>';
+								divContent += '<p><b>Primary Number:</b> ' + primaryNumber + '</p>';
+								divContent += '<p><b>Primary Address:</b> ' + primaryAddress + '</p><p><b>Primary Email:</b> ' + primaryEmail + '</p>';
+								divContent += '<p><b>Document:</b> ' + document + '</p><p><b>Status:</b> ' + status + '</p></div>';
+
+						$("#mediaContainer").append(divContent);
 				}
+
+				var active = '';
+				for (var item in data["@search.facets"].active)
+				{
+					if (activeFacet != data["@search.facets"].active[item].value) {
+						$( "#activeContainer" ).append( '<li><a href="javascript:void(0);" onclick="setActiveFacet(\'' + data["@search.facets"].active[item].value + '\');">' + data["@search.facets"].active[item].value + ' (' + data["@search.facets"].active[item].count + ')</a></li>' );
+					}
+				}
+
+				// var eligibilities = '';
+				// for (var item in data["@search.facets"].eligibilities)
+				// {
+				// 	if (eligibilitiesFacet != data["@search.facets"].eligibilities[item].value) {
+				// 		$( "#eligibilitiesContainer" ).append( '<li><a href="javascript:void(0);" onclick="setEligibilitiesFacet(\'' + data["@search.facets"].eligibilities[item].value + '\');">' + data["@search.facets"].eligibilities[item].value + ' (' + data["@search.facets"].eligibilities[item].count + ')</a></li>' );
+
+				// 	}
+				// }
+
+				var lastModifiedBy = '';
+				for (var item in data["@search.facets"].lastModifiedBy)
+				{
+					if (lastModifiedByFacet != data["@search.facets"].lastModifiedBy[item].value) {
+						$( "#lastModifiedByContainer" ).append( '<li><a href="javascript:void(0);" onclick="setLastModifiedByFacet(\'' + data["@search.facets"].lastModifiedBy[item].value + '\');">' + data["@search.facets"].lastModifiedBy[item].value + ' (' + data["@search.facets"].lastModifiedBy[item].count + ')</a></li>' );
+					}
+				}
+
+				var createdBy = '';
+				for (var item in data["@search.facets"].createdBy)
+				{
+					if (createdByFacet != data["@search.facets"].createdBy[item].value) {
+						$( "#createdByContainer" ).append( '<li><a href="javascript:void(0);" onclick="setCreatedByFacet(\'' + data["@search.facets"].createdBy[item].value + '\');">' + data["@search.facets"].createdBy[item].value + ' (' + data["@search.facets"].createdBy[item].count + ')</a></li>' );
+					}
+				}
+
 
 				// Update Pagination
 				UpdatePagination(data["@search.count"]);
@@ -98,6 +193,50 @@ function execSearch()
 				execSearch();
 		});
 	}	
+}
+
+function setActiveFacet(facet)
+{
+	// User clicked on a subject facet
+	activeFacet = facet;
+	if (facet != '')
+		$("#currentActive").html(facet + '<a href="javascript:void(0);" onclick="setActiveFacet(\'\');"> [X]</a>');
+	else
+		$("#currentActive").html('');
+	execSearch();
+}
+
+// function setEligibilitiesFacet(facet)
+// {
+// 	// User clicked on a subject facet
+// 	eligibilitiesFacet=facet;
+// 	if (facet != '')
+// 		$("#currentEligibilities").html(facet + '<a href="javascript:void(0);" onclick="setEligibilitiesFacet(\'\');"> [X]</a>');
+// 	else
+// 		$("#currentEligibilities").html('');
+// 	execSearch();
+// }
+
+function setLastModifiedByFacet(facet)
+{
+	// User clicked on a subject facet
+	lastModifedByFacet=facet;
+	if (facet != '')
+		$("#currentLastModifedBy").html(facet + '<a href="javascript:void(0);" onclick="setLastModifedByFacet(\'\');"> [X]</a>');
+	else
+		$("#currentLastModifedBy").html('');
+	execSearch();
+}
+
+function setCreatedByFacet(facet)
+{
+	// User clicked on a subject facet
+	createdByFacet=facet;
+	if (facet != '')
+		$("#currentCreatedBy").html(facet + '<a href="javascript:void(0);" onclick="setCreatedByFacet(\'\');"> [X]</a>');
+	else
+		$("#currentCreatedBy").html('');
+	execSearch();
 }
 
 function UpdatePagination(docCount) {
@@ -130,8 +269,7 @@ function UpdatePagination(docCount) {
 	$("#pagination").html(htmlString);
 }
 	
-function ChangePage(page)
-{
+function ChangePage(page) {
 	// User clicked on the pagination
 	currentPage = page;
 	execSearch();
