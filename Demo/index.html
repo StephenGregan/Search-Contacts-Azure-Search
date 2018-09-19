@@ -46,7 +46,7 @@
             <div class="col-md-4">
                 <!-- Blog Search Well -->
                 <div class="well">
-                    <h4>Gallery Search</h4>
+                    <h4>Contacts Search</h4>
                     <div class="input-group">
                         <input type="text" placeholder="Search for contacts..." class="form-control" id="q" oninput="execSearch();">
                         <span class="input-group-btn">
@@ -59,25 +59,12 @@
                 </div>
                 <!-- Blog Categories Well -->
                 <div class="well">
-                    <h4>Active</h4>
-					<p id="currentActive"></p>
-                    <div class="row">
-                        <div class="col-lg-12">
-							<ul class="list-unstyled" id="activeContainer">
-							</ul>
-						</div>
-                        <!-- /.col-lg-6 -->
-                    </div>
-                    <!-- /.row -->
-                </div>
-                <!-- Blog Categories Well -->
-                <div class="well">
                     <h4>Last Modified By</h4>
 					<p id="currentLastModifiedBy"></p>
                     <div class="row">
                         <div class="col-lg-12">
-							<br><ul class="list-unstyled" id="lastModifiedByContainer">
-							</ul><br>
+							<p><ul class="list-unstyled" id="lastModifiedByContainer">
+							</ul></p>
 						</div>
                         <!-- /.col-lg-6 -->
                     </div>
@@ -89,8 +76,47 @@
 					<p id="currentCreatedBy"></p>
                     <div class="row">
                         <div class="col-lg-12">
-							<br><ul class="list-unstyled" id="createdByContainer">
-							</ul><br>
+                        	<p><ul class="list-unstyled" id="createdByContainer">
+							</ul></p>
+						</div>
+                        <!-- /.col-lg-6 -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- Blog Categories Well -->
+                <div class="well">
+                    <h4>Country Of Origin</h4>
+					<p id="currentCountryOfOrigin"></p>
+                    <div class="row">
+                        <div class="col-lg-12">
+                        	<p><ul class="list-unstyled" id="countryOfOriginContainer">
+							</ul></p>
+						</div>
+                        <!-- /.col-lg-6 -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                <!-- Blog Categories Well -->
+                <div class="well">
+                    <h4>Active</h4>
+					<p id="currentActive"></p>
+                    <div class="row">
+                        <div class="col-lg-12">
+                        	<p><ul class="list-unstyled" id="activeContainer">
+							</ul></p>
+						</div>
+                        <!-- /.col-lg-6 -->
+                    </div>
+                    <!-- /.row -->
+                </div>
+                 <!-- Blog Categories Well -->
+                <div class="well">
+                    <h4>Has Transportation</h4>
+					<p id="currentHasTransportation"></p>
+                    <div class="row">
+                        <div class="col-lg-12">
+                        	<p><ul class="list-unstyled" id="hasTransportationContainer">
+							</ul></p>
 						</div>
                         <!-- /.col-lg-6 -->
                     </div>
@@ -112,6 +138,7 @@
 				</nav>
 			</div>		
             <div class="col-md-8">
+            	<h2><span class="jobs-count" id="jobs-count"></span> Available Contacts</h2>
 				<div id="mediaContainer">
 				</div>
             </div>
@@ -122,6 +149,9 @@
         <footer>
             <div class="row">
                 <div class="col-lg-12">
+                	<div>
+                		
+                	</div>
                 	<br>
 					<p><a href="https://github.com/StephenGregan">My GitHub Account</a></p>
 					<p><a href="https://azure.microsoft.com/en-us/services/search/">JSON Complex DataTypes</a></p>

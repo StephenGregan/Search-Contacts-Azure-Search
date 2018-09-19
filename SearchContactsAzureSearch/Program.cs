@@ -17,7 +17,7 @@ namespace SearchContactsAzureSearch
         #region Variables
         private static string searchServiceName = "[SearchServiceName]";
         private static string searchServiceApiKey = "[SearchServiceApiKey]";
-        private static string azureSearchIndex = "[IndexName]";
+        private static string azureSearchIndex = "[SearchServiceIndexName]";
         private static SearchServiceClient _searchServiceClient;
         private static SearchIndexClient _searchIndexClient;
         #endregion
@@ -33,17 +33,14 @@ namespace SearchContactsAzureSearch
             DeleteIndex();
 
             Console.WriteLine("{0}, Creating Index...\n", azureSearchIndex);
-
             if (CreateIndex() == false)
             {
                 Console.ReadLine();
                 return;
             }
-
             Console.WriteLine("{0}, Uploading content...\n", azureSearchIndex);
             UploadContent();
             //UploadContacts();
-
             Console.WriteLine("\nPress any key to continue\n");
             Console.ReadLine();
         }
@@ -75,10 +72,8 @@ namespace SearchContactsAzureSearch
             {
                 "*"
             };
-
             cors.AllowedOrigins = origins;
             cors.MaxAgeInSeconds = 300;
-
             try
             {
                 var definition = new Index
@@ -282,7 +277,6 @@ namespace SearchContactsAzureSearch
                             contactTypesList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("contactTypes", contactTypesList);
                 }
 
@@ -301,7 +295,6 @@ namespace SearchContactsAzureSearch
                             languageMappingsList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("languageMappings", languageMappingsList);
                 }
 
@@ -319,7 +312,6 @@ namespace SearchContactsAzureSearch
                             primaryNumberList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("primaryNumber", primaryNumberList);
                 }
 
@@ -337,7 +329,6 @@ namespace SearchContactsAzureSearch
                             numbersList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("numbers", numbersList);
                 }
                 // Object
@@ -352,7 +343,6 @@ namespace SearchContactsAzureSearch
                             primaryAddressList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("primaryAddress", primaryAddressList);
                 }
 
@@ -374,7 +364,6 @@ namespace SearchContactsAzureSearch
                             addressesList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("addresses", addressesList);
                 }
 
@@ -390,7 +379,6 @@ namespace SearchContactsAzureSearch
                             primaryEmailList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("primaryEmail", primaryEmailList);
                 }
                 //doc.Add("primaryEmail", array["primaryEmail"]);
@@ -407,7 +395,6 @@ namespace SearchContactsAzureSearch
                             emailsList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("emails", emailsList);
                 }
 
@@ -423,7 +410,6 @@ namespace SearchContactsAzureSearch
                             qualificationsList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("qualifications", qualificationsList);
                 }
 
@@ -439,7 +425,6 @@ namespace SearchContactsAzureSearch
                             eligibilitiesList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("eligibilities", eligibilitiesList);
                 }
 
@@ -455,7 +440,6 @@ namespace SearchContactsAzureSearch
                             criteriaHierarchyList.Add(item);
                         }
                     }
-
                     doc.Add("criteriaHierarchy", criteriaHierarchyList);
                 }
 
@@ -488,6 +472,7 @@ namespace SearchContactsAzureSearch
                 doc.Add("assignmentTierId", array["assignmentTierId"] == null ? -1 : array["assignmentTierId"]);
                 doc.Add("timeZone", array["timeZone"] == null ? "" : array["timeZone"]);
                 doc.Add("ethnicity", array["ethnicity"] == null ? "" : array["ethnicity"]);
+
                 // Object
                 if (array["document"] != null)
                 {
@@ -500,7 +485,6 @@ namespace SearchContactsAzureSearch
                             documentList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("document", documentList);
                 }
 
@@ -525,6 +509,7 @@ namespace SearchContactsAzureSearch
                 doc.Add("recruiterName", array["recruiterName"] == null ? "" : array["recruiterName"]);
                 doc.Add("taleoId", array["taleoId"] == null ? "" : array["taleoId"]);
                 doc.Add("bankAccountReference", array["bankAccountreference"] == null ? "" : array["bankAccountReference"]);
+
                 // Object
                 if (array["status"] != null)
                 {
@@ -537,7 +522,6 @@ namespace SearchContactsAzureSearch
                             statusList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("status", statusList);
                 }
 
@@ -562,7 +546,6 @@ namespace SearchContactsAzureSearch
                             servicesList.Add(item.ToString());
                         }
                     }
-
                     doc.Add("services", servicesList);
                 }
 
@@ -594,7 +577,7 @@ namespace SearchContactsAzureSearch
         }
     }
 }
-
+#region Testing
 //        private static void UploadContent()
 //        {
 //            // Scan the JSON files from Interpreter Intelligence contacts and upload them to Azure Search.
@@ -1003,6 +986,6 @@ namespace SearchContactsAzureSearch
 //#endregion
 //#endregion
 //    }
-
+#endregion
 //}
 #endregion

@@ -1,9 +1,11 @@
 var azureSearchQueryKey = "[SearchServiceQueryKey]";
 var inSearch= false;
 var q = "*";
-var activeFacet = '';
 var lastModifiedByFacet = '';
 var createdByFacet = '';
+var countryOfOriginFacet = '';
+var activeFacet = '';
+var hasTransportationFacet = '';
 var currentPage = 1;
 
 function execSearch()
@@ -20,18 +22,38 @@ function execSearch()
 		if (searchQuery.length == 0)
 			searchQuery = '*';
 
+		// if(lastModifiedByFacet > 0)
+		// 	searchQuery += '&$filter=lastModifiedBy/any(t: t eq \'' + encodeURIComponent(lastModifiedByFacet) + '\')';
+
+		// if(createdByFacet > 0){
+		// 	if(lastModifedByFacet.length == 0)
+		// 		searchQuery += '&$filter=';
+		// 	else
+		// 		searchQuery += ' and ';
+		// 	searchQuery += '&$filter=createdBy/any(t: t eq \'' + encodeURIComponent(createdByFacet) + '\')';
+		// }
+
 		if(activeFacet > 0)
 			searchQuery += '&$filter=active/any(t: t eq \'' + encodeURIComponent(activeFacet) + '\')';
 		
 		if(createdByFacet > 0)
 			searchQuery += '&$filter=createdBy/any(t: t eq \'' + encodeURIComponent(createdByFacet) + '\')';
 
+		if(lastModifiedByFacet > 0)
+			searchQuery += '&$filter=lastModifiedBy/any(t: t eq \'' + encodeURIComponent(lastModifiedByFacet) + '\')';
+
+		if(countryOfOriginFacet > 0)
+			searchQuery += '&$filter=countryOfOrigin/any(t: t eq \'' + encodeURIComponent(countryOfOriginFacet) + '\')';
+
+		if(hasTransportationFacet > 0)
+			searchQuery += '&$filter=hasTransportation/any(t: t eq \'' + encodeURIComponent(hasTransportationFacet) + '\')';
+
 		var searchAPI = "https://ronansearch.search.windows.net/indexes/index/docs?$skip=" + (currentPage-1).toString() + "&$top=5&$select=imagePath,displayName,id"
 				searchAPI += ",uuid,createdBy,createdDate,lastModifiedBy,lastModifiedDate,firstName,active,middleName,lastName,accountingReference,countryOfOrigin,"
 				searchAPI += "disableUpcomingReminder,disableCloseReminder,disableConfirmReminder,hasTransportation,hasChildren,companyName,website,bankAccount,"
 				searchAPI += "registeredTax,registeredTaxIdDescription,sortCode,iban,swift,notes,activeNote,contactTypes,languageMappings,numbers,addresses,emails,"
 				searchAPI += "qualifications,eligibilities,criteriaHierarchy,services,primaryNumber,primaryAddress,primaryEmail,document,status&api-version=2015-02-28"
-				searchAPI += "&highlight=displayName&$count=true&facet=active&facet=lastModifiedBy&facet=createdBy&search=" + searchQuery;
+				searchAPI += "&highlight=displayName&$count=true&facet=active&facet=lastModifiedBy&facet=createdBy&facet=countryOfOrigin&facet=hasTransportation&search=" + searchQuery;
 
 		$.ajax({
 			url: searchAPI,
@@ -46,9 +68,11 @@ function execSearch()
 
 				$("#mediaContainer").html('');
 				$("#activeContainer").html('');
-				// $("#eligibilitiesContainer").html('');
+				$("#countryOfOriginContainer").html('');
 				$("#lastModifiedByContainer").html('');
 				$("#createdByContainer").html('');
+				$("#hasTransportationContainer").html('');
+				$("#jobs-count").html(data.Count);
 
 				for (var item in data.value) {
 						var id = data.value[item].id;
@@ -107,8 +131,8 @@ function execSearch()
 						// You will get undefined for everything if you dont specify all the fields on the web page in the searchAPI variable
 						var divContent = '<div class="row">';
 								divContent += '<div class="col-md-4">';
-								divContent += '<p><a href="' + imagePath + '"><img class="img-responsive" src="' + imagePath + '" alt=""></p>';
-								divContent += '<h2>Contact Information:</h2>';
+								divContent += '<br><p><a href="' + imagePath + '"><img class="img-responsive" src="' + imagePath + '" alt=""></a></p>';
+								divContent += '<h2>Contact Information</h2>';
 								divContent += '<p><b>Name:</b> ' + displayName + '</p><p><b>Id:</b> ' + id + '</p>';
 								divContent += '<p><b>Uuid:</b> ' + uuid + '</p><p><b>Created By:</b> ' + createdBy + '</p>';
 								divContent += '<p><b>Created Date:</b> ' + createdDate + '</p><p><b>Last Modified By:</b> ' + lastModifiedBy + '</p>';
@@ -127,13 +151,13 @@ function execSearch()
 								divContent += '<p><b>Sort Code:</b> ' + sortCode + '</p><p><b>I Ban:</b> ' + iban + '</p>';
 								divContent += '<p><b>Swift:</b> ' + swift + '</p><p><b>Notes:</b> ' + notes + '</p>';
 								divContent += '<p><b>Active Note:</b> ' + activeNote + '</p><br></div>';
-								divContent += '<br><div class="col-md-8"><h2>Arrays:</h2><p><b>Contact Types:</b> ' + contactTypes + '</p>';
+								divContent += '<br><div class="col-md-8"><h2>Arrays</h2><p><b>Contact Types:</b> ' + contactTypes + '</p>';
 								divContent += '<p><b>Language Mappings:</b> ' + languageMappings + '</p>';
 								divContent += '<p><b>Numbers:</b> ' + numbers + '</p><p><b>Addresses:</b> ' + addresses + '</p>';
 								divContent += '<p><b>Emails:</b> ' + emails + '</p><p><b>Qualifications:</b> ' + qualifications + '</p>';
-								divContent += '<p><b>Eligibilities:</b>' + eligibilities + '</p>';
+								divContent += '<p><b>Eligibilities:</b> ' + eligibilities + '</p>';
 								divContent += '<p><b>Criteria Hierarchy:</b> ' + criteriaHierarchy + '</p>';
-								divContent += '<p><b>Services:</b> ' + services + '</p><h2>Objects:</h2>';
+								divContent += '<p><b>Services:</b> ' + services + '</p><h2>Objects</h2>';
 								divContent += '<p><b>Primary Number:</b> ' + primaryNumber + '</p>';
 								divContent += '<p><b>Primary Address:</b> ' + primaryAddress + '</p><p><b>Primary Email:</b> ' + primaryEmail + '</p>';
 								divContent += '<p><b>Document:</b> ' + document + '</p><p><b>Status:</b> ' + status + '</p></div>';
@@ -162,6 +186,22 @@ function execSearch()
 				{
 					if (createdByFacet != data["@search.facets"].createdBy[item].value) {
 						$( "#createdByContainer" ).append( '<li><a href="javascript:void(0);" onclick="setCreatedByFacet(\'' + data["@search.facets"].createdBy[item].value + '\');">' + data["@search.facets"].createdBy[item].value + ' (' + data["@search.facets"].createdBy[item].count + ')</a></li>' );
+					}
+				}
+
+				var countryOfOrigin = '';
+				for (var item in data["@search.facets"].countryOfOrigin)
+				{
+					if (countryOfOriginFacet != data["@search.facets"].countryOfOrigin[item].value) {
+						$( "#countryOfOriginContainer" ).append( '<li><a href="javascript:void(0);" onclick="setCountryOfOriginFacet(\'' + data["@search.facets"].countryOfOrigin[item].value + '\');">' + data["@search.facets"].countryOfOrigin[item].value + ' (' + data["@search.facets"].countryOfOrigin[item].count + ')</a></li>' );
+					}
+				}
+
+				var hasTransportation = '';
+				for (var item in data["@search.facets"].hasTransportation)
+				{
+					if (hasTransportationFacet != data["@search.facets"].hasTransportation[item].value) {
+						$( "#hasTransportationContainer" ).append( '<li><a href="javascript:void(0);" onclick="setHasTransportationFacet(\'' + data["@search.facets"].hasTransportation[item].value + '\');">' + data["@search.facets"].hasTransportation[item].value + ' (' + data["@search.facets"].hasTransportation[item].count + ')</a></li>' );
 					}
 				}
 
@@ -207,6 +247,28 @@ function setCreatedByFacet(facet)
 		$("#currentCreatedBy").html(facet + '<a href="javascript:void(0);" onclick="setCreatedByFacet(\'\');"> [X]</a>');
 	else
 		$("#currentCreatedBy").html('');
+	execSearch();
+}
+
+function setCountryOfOriginFacet(facet)
+{
+	// User clicked on a subject facet
+	countryOfOriginFacet=facet;
+	if (facet != '')
+		$("#currentCountryOfOrigin").html(facet + '<a href="javascript:void(0);" onclick="setCountryOfOriginFacet(\'\');"> [X]</a>');
+	else
+		$("#currentCountryOfOrigin").html('');
+	execSearch();
+}
+
+function setHasTransportationFacet(facet)
+{
+	// User clicked on a subject facet
+	hasTransportationFacet=facet;
+	if (facet != '')
+		$("#currentHasTransportation").html(facet + '<a href="javascript:void(0);" onclick="setHasTransportationFacet(\'\');"> [X]</a>');
+	else
+		$("#currentHasTransportation").html('');
 	execSearch();
 }
 
