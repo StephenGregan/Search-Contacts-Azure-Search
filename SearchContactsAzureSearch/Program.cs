@@ -15,9 +15,9 @@ namespace SearchContactsAzureSearch
     class Program
     {
         #region Variables
-        private static string searchServiceName = "[SearchServiceName]";
-        private static string searchServiceApiKey = "[SearchServiceApiKey]";
-        private static string azureSearchIndex = "[SearchServiceIndexName]";
+        private static string searchServiceName = "";
+        private static string searchServiceApiKey = "";
+        private static string azureSearchIndex = "";
         private static SearchServiceClient _searchServiceClient;
         private static SearchIndexClient _searchIndexClient;
         #endregion
@@ -40,7 +40,8 @@ namespace SearchContactsAzureSearch
             }
             Console.WriteLine("{0}, Uploading content...\n", azureSearchIndex);
             UploadContent();
-            //UploadContacts();
+
+            // UploadContacts();
             Console.WriteLine("\nPress any key to continue\n");
             Console.ReadLine();
         }
@@ -49,7 +50,7 @@ namespace SearchContactsAzureSearch
         #region Methods
         private static bool DeleteIndex()
         {
-            // Delete the index, datasource and indexer.
+            // Delete the Index
             try
             {
                 _searchServiceClient.Indexes.Delete(azureSearchIndex);
@@ -67,6 +68,8 @@ namespace SearchContactsAzureSearch
         {
             // Create an Azure Search index based on the schema.
             // Enable all CORS origins
+            // Please do not enable CORS origins everwhere like
+            // the code below this is for testing purposes only!
             CorsOptions cors = new CorsOptions();
             List<string> origins = new List<string>
             {
@@ -80,6 +83,14 @@ namespace SearchContactsAzureSearch
                 {
                     Name = azureSearchIndex,
                     CorsOptions = cors,
+                    // Creating all the fields in the index
+                    // IsKey: Specifies the Primary key for the index. It must be unique and represented as a String.
+                    // Example: "id", DataType.String is fine | "id", DatypeType.Int32 is not
+                    // IsFacetable: 
+                    // IsFilterable: 
+                    // IsRetrievable: 
+                    // IsSearchable: Specifies whether a field should be searchable or not
+                    // IsSortable: Can we sort the field
                     Fields = new[]
                     {
                         #region Fields
@@ -210,7 +221,7 @@ namespace SearchContactsAzureSearch
                         #endregion
                     }
                 };
-
+                // Create the index definition
                 _searchServiceClient.Indexes.Create(definition);
             }
             catch (Exception ex)
@@ -226,9 +237,9 @@ namespace SearchContactsAzureSearch
             #region First Index Batch
             // This will open the JSON file, parse it and upload the documents in a batch
             List<IndexAction> indexOperations = new List<IndexAction>();
-            JArray contact1 = JArray.Parse(File.ReadAllText(@"interpreterintelligencecontacts1.json"));
+            JArray contact = JArray.Parse(File.ReadAllText(@"interpreterintelligencecontacts4.json"));
 
-            foreach (var array in contact1)
+            foreach (var array in contact)
             {
                 //using (StreamReader jsonfile = File.OpenText(file))
                 //{
@@ -265,6 +276,9 @@ namespace SearchContactsAzureSearch
                     { "dateOfBirth", array["dateOfBirth"] == null ? "" : array["dateOfBirth"] }
                 };
 
+                // You can Use JArray/JObject when parsing the JSON.
+                // You must cast array["contactTypes"] to type JArray.
+                // I am using JToken as it removes the need to cast.
                 // ContactTypes Array [1]
                 if (array["contactTypes"] != null)
                 {
@@ -300,7 +314,7 @@ namespace SearchContactsAzureSearch
 
                 doc.Add("rating", array["rating"] == null ? "" : array["rating"]);
 
-                // Object
+                // Object Primary Number
                 if (array["primaryNumber"] != null)
                 {
                     JToken primaryNumberObject = array["primaryNumber"];
@@ -331,7 +345,7 @@ namespace SearchContactsAzureSearch
                     }
                     doc.Add("numbers", numbersList);
                 }
-                // Object
+                // Object Primary Address
                 if (array["primaryAddress"] != null)
                 {
                     JToken primaryAddressObject = array["primaryAddress"];
@@ -348,6 +362,10 @@ namespace SearchContactsAzureSearch
 
                 //doc.Add("primaryAddress", array["primaryAddress"]);
 
+                // This is not working now, when I try to index lat/lng
+                // I get not a valid Spatial value.  I am not sure why!
+                // I was hoping to implement a map on the web page to 
+                // display the location of the contacts.
                 // Testing GeographyPoint for 'lat' and 'lng' 
                 //doc.Add("lat", array["lat"] == null ? 41.888 : array["lat"]);
                 //doc.Add("lng", array["lng"] == null ? -8.454 : array["lng"]);
@@ -367,7 +385,7 @@ namespace SearchContactsAzureSearch
                     doc.Add("addresses", addressesList);
                 }
 
-                // Object
+                // Object Primary Email
                 if (array["primaryEmail"] != null)
                 {
                     JToken primaryEmailObject = array["primaryEmail"];
@@ -473,7 +491,7 @@ namespace SearchContactsAzureSearch
                 doc.Add("timeZone", array["timeZone"] == null ? "" : array["timeZone"]);
                 doc.Add("ethnicity", array["ethnicity"] == null ? "" : array["ethnicity"]);
 
-                // Object
+                // Object Document
                 if (array["document"] != null)
                 {
                     JToken documentObject = array["document"];
@@ -510,7 +528,7 @@ namespace SearchContactsAzureSearch
                 doc.Add("taleoId", array["taleoId"] == null ? "" : array["taleoId"]);
                 doc.Add("bankAccountReference", array["bankAccountreference"] == null ? "" : array["bankAccountReference"]);
 
-                // Object
+                // Object Status
                 if (array["status"] != null)
                 {
                     JToken statusObject = array["status"];
@@ -554,6 +572,7 @@ namespace SearchContactsAzureSearch
                 doc.Add("lastSynchronizedDate", array["lastSynchronizedDate"] == null ? "" : array["lastSynchronizedDate"]);
                 #endregion
 
+                // Upload the documents to Azure Search
                 indexOperations.Add(IndexAction.Upload(doc));
 
                 try
@@ -561,7 +580,7 @@ namespace SearchContactsAzureSearch
                     _searchIndexClient.Documents.Index(new IndexBatch(indexOperations));
                     Console.WriteLine("Documents" + doc);
                     Console.WriteLine("Index operations: " + indexOperations);
-                    //Console.WriteLine(contact1);
+                    //Console.WriteLine(contact);
                 }
                 catch (IndexBatchException e)
                 {

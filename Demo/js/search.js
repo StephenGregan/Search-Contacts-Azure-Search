@@ -1,79 +1,103 @@
-var azureSearchQueryKey = "[SearchServiceQueryKey]";
-var inSearch= false;
-var q = "*";
+// You need the Azure Search Query Key to search the index.  You can add/delete query keys in the Azure Portal.
+// A good idea I think would be to put the query keys in SQL and validate them when a user enters the correct 
+// query key from a login page similar to a username and password login.  The login page is included in the 
+// Demo folder.  For instance if the user enters the correct query key let them search the index, if not link 
+// them a email to enquire about how to get a query key.
+var azureSearchQueryKey = "";
+// Default inSearch to false.
+var inSearch = false;
+// Search Everything
+var q = '*';
+// All the facets for the index.
 var lastModifiedByFacet = '';
 var createdByFacet = '';
 var countryOfOriginFacet = '';
 var activeFacet = '';
 var hasTransportationFacet = '';
+var numbersFacet = '';
+var qualificationsFacet = '';
+// Set the current page to page 1.
 var currentPage = 1;
 
+// The execSearch function
 function execSearch()
 {
-	// Execute a search to lookup
+	// Execute a search to lookup 
 	if (inSearch == false) {
-		inSearch = true;
+		inSearch= true;
 		var q = $("#q").val();
 		var searchQuery = encodeURIComponent(q);
-
-		if (q.length = 0) 
+		
+		if (q.length = 0)
 			searchQuery = '*';
 
 		if (searchQuery.length == 0)
 			searchQuery = '*';
 
-		// if(lastModifiedByFacet > 0)
-		// 	searchQuery += '&$filter=lastModifiedBy/any(t: t eq \'' + encodeURIComponent(lastModifiedByFacet) + '\')';
-
-		// if(createdByFacet > 0){
-		// 	if(lastModifedByFacet.length == 0)
-		// 		searchQuery += '&$filter=';
-		// 	else
-		// 		searchQuery += ' and ';
-		// 	searchQuery += '&$filter=createdBy/any(t: t eq \'' + encodeURIComponent(createdByFacet) + '\')';
-		// }
-
-		if(activeFacet > 0)
-			searchQuery += '&$filter=active/any(t: t eq \'' + encodeURIComponent(activeFacet) + '\')';
-		
-		if(createdByFacet > 0)
-			searchQuery += '&$filter=createdBy/any(t: t eq \'' + encodeURIComponent(createdByFacet) + '\')';
-
-		if(lastModifiedByFacet > 0)
+		if (lastModifiedByFacet.length > 0)
 			searchQuery += '&$filter=lastModifiedBy/any(t: t eq \'' + encodeURIComponent(lastModifiedByFacet) + '\')';
 
-		if(countryOfOriginFacet > 0)
+		if (createdByFacet.length > 0)
+			searchQuery += '&$filter=createdBy/any(t: t eq \'' + encodeURIComponent(createdByFacet) + '\')';
+
+		if (countryOfOriginFacet.length > 0)
 			searchQuery += '&$filter=countryOfOrigin/any(t: t eq \'' + encodeURIComponent(countryOfOriginFacet) + '\')';
 
-		if(hasTransportationFacet > 0)
+		if (activeFacet.length > 0)
+			searchQuery += '&$filter=active/any(t: t eq \'' + encodeURIComponent(activeFacet) + '\')';
+
+		if (hasTransportationFacet.length > 0)
 			searchQuery += '&$filter=hasTransportation/any(t: t eq \'' + encodeURIComponent(hasTransportationFacet) + '\')';
 
-		var searchAPI = "https://ronansearch.search.windows.net/indexes/index/docs?$skip=" + (currentPage-1).toString() + "&$top=5&$select=imagePath,displayName,id"
-				searchAPI += ",uuid,createdBy,createdDate,lastModifiedBy,lastModifiedDate,firstName,active,middleName,lastName,accountingReference,countryOfOrigin,"
-				searchAPI += "disableUpcomingReminder,disableCloseReminder,disableConfirmReminder,hasTransportation,hasChildren,companyName,website,bankAccount,"
-				searchAPI += "registeredTax,registeredTaxIdDescription,sortCode,iban,swift,notes,activeNote,contactTypes,languageMappings,numbers,addresses,emails,"
-				searchAPI += "qualifications,eligibilities,criteriaHierarchy,services,primaryNumber,primaryAddress,primaryEmail,document,status&api-version=2015-02-28"
-				searchAPI += "&highlight=displayName&$count=true&facet=active&facet=lastModifiedBy&facet=createdBy&facet=countryOfOrigin&facet=hasTransportation&search=" + searchQuery;
+		if (numbersFacet.length > 0)
+			searchQuery += '&$filter=numbers/any(t: t eq \'' + encodeURIComponent(numbersFacet) + '\')';
 
+		if (qualificationsFacet.length > 0)
+			searchQuery += '&$filter=qualifications/any(t: t eq \'' + encodeURIComponent(qualificationsFacet) + '\')';
+
+		// Set up all the url, fields, facets, hit highlighting(currently not implemented) and contact page limit.  I have set it to 5 documents per page.
+		// Functionality that would enhance the search experience would be to implement hit highlighting, this sets up when you make a search eg Adam you will get 
+		// Adam highlighted.
+		var searchAPI = "https://ronansearch.search.windows.net/indexes/contactsindex/docs?$skip=" + (currentPage-1).toString() + "&$top=5&$select=imagePath,";
+				searchAPI += "displayName,id,uuid,createdBy,createdDate,lastModifiedBy,lastModifiedDate,firstName,active,middleName,lastName,dateOfBirth,accountingReference,";
+				searchAPI += "countryOfOrigin,disableUpcomingReminder,disableCloseReminder,disableConfirmReminder,hasTransportation,hasChildren,companyName,website,";
+				searchAPI += "bankAccount,registeredTax,registeredTaxIdDescription,sortCode,iban,swift,notes,activeNote,contactTypes,languageMappings,numbers,addresses,";
+				searchAPI += "emails,qualifications,eligibilities,criteriaHierarchy,services,primaryNumber,primaryAddress,primaryEmail,document,status&api-version=2015-02-";
+				searchAPI += "28&$count=true&facet=active&facet=lastModifiedBy&facet=createdBy&facet=countryOfOrigin&facet=hasTransportation&facet=numbers&facet=qualifications";
+				searchAPI += "&search=" + searchQuery;
 		$.ajax({
 			url: searchAPI,
 			beforeSend: function (request) {
+				// You must allow origins if you want to display the documents 
+				// indexed on to a web page.  This '*' specifies that we want to
+				// enable CORS for everything.  This was used strictly by me
+				// and you would never want to do this and it leaves room to
+				// get exploited.  Information about CORS: 
 				request.setRequestHeader("Access-Control-Allow-Origin", "*");
+				// Setting up the Api/Query key
 				request.setRequestHeader("api-key", azureSearchQueryKey);
+				// The type is type JSON (JavaScript Object Notation)
+				// Link:
 				request.setRequestHeader("Content-Type", "application/json");
+				// This specifies that we should only accept the type JSON
 				request.setRequestHeader("Accept", "application/json; odata.metadata=none");
 			},
+			// This is a GET request where we get all the content
+			// we want from the created index
 			type: "GET",
 			success: function (data) {
-
 				$("#mediaContainer").html('');
-				$("#activeContainer").html('');
-				$("#countryOfOriginContainer").html('');
 				$("#lastModifiedByContainer").html('');
 				$("#createdByContainer").html('');
+				$("#countryOfOriginContainer").html('');
+				$("#activeContainer").html('');
 				$("#hasTransportationContainer").html('');
-				$("#jobs-count").html(data.Count);
+				$("#numbersContainer").html('');
+				$("#qualificationsContainer").html('');
 
+				// Declare the item variable and loop throught the data
+				// I have taken all the fields that I think are valid.
+				// You can add or remove what you like.
 				for (var item in data.value) {
 						var id = data.value[item].id;
 						var uuid = data.value[item].uuid;
@@ -129,6 +153,8 @@ function execSearch()
 						var services = data.value[item].services;
 
 						// You will get undefined for everything if you dont specify all the fields on the web page in the searchAPI variable
+						// This displays how everything will look when it is displayed on the web page.  I have tried to make it as readable
+						// as possible.  Please break it down into sections if it is confusing at first.
 						var divContent = '<div class="row">';
 								divContent += '<div class="col-md-4">';
 								divContent += '<br><p><a href="' + imagePath + '"><img class="img-responsive" src="' + imagePath + '" alt=""></a></p>';
@@ -138,8 +164,8 @@ function execSearch()
 								divContent += '<p><b>Created Date:</b> ' + createdDate + '</p><p><b>Last Modified By:</b> ' + lastModifiedBy + '</p>';
 								divContent += '<p><b>Last Modified Date:</b> ' + lastModifiedDate + '</p><p><b>First Name:</b> ' + firstName + '</p>';
 								divContent += '<p><b>Active:</b> ' + active + '</p><p><b>Middle Name:</b> ' + middleName + '</p>';
-								divContent += '<p><b>Last Name:</b> ' + lastName + '</p><p><b>accounting Reference:</b> ' + accountingReference + '</p>';
-								divContent += '<p><b>Country Of Origin:</b> ' + countryOfOrigin + '</p>';
+								divContent += '<p><b>Last Name:</b> ' + lastName + '</p><p><b>Date of Birth:</b> ' + dateOfBirth + '</p>';
+								divContent += '<p><b>accounting Reference:</b> ' + accountingReference + '</p><p><b>Country Of Origin:</b> ' + countryOfOrigin + '</p>';
 								divContent += '<p><b>disableUpcomingReminder:</b> ' + disableUpcomingReminder + '</p>';
 								divContent += '<p><b>disableCloseReminder:</b> ' + disableCloseReminder + '</p>';
 								divContent += '<p><b>disableConfirmReminder:</b> ' + disableConfirmReminder + '</p>';
@@ -161,17 +187,9 @@ function execSearch()
 								divContent += '<p><b>Primary Number:</b> ' + primaryNumber + '</p>';
 								divContent += '<p><b>Primary Address:</b> ' + primaryAddress + '</p><p><b>Primary Email:</b> ' + primaryEmail + '</p>';
 								divContent += '<p><b>Document:</b> ' + document + '</p><p><b>Status:</b> ' + status + '</p></div>';
-
+						// Append the above content into the mediaContainer
 						$("#mediaContainer").append(divContent);
-				}
-
-				var active = '';
-				for (var item in data["@search.facets"].active)
-				{
-					if (activeFacet != data["@search.facets"].active[item].value) {
-						$( "#activeContainer" ).append( '<li><a href="javascript:void(0);" onclick="setActiveFacet(\'' + data["@search.facets"].active[item].value + '\');">' + data["@search.facets"].active[item].value + ' (' + data["@search.facets"].active[item].count + ')</a></li>' );
-					}
-				}
+				}	
 
 				var lastModifiedBy = '';
 				for (var item in data["@search.facets"].lastModifiedBy)
@@ -197,11 +215,35 @@ function execSearch()
 					}
 				}
 
+				var active = '';
+				for (var item in data["@search.facets"].active)
+				{
+					if (activeFacet != data["@search.facets"].active[item].value) {
+						$( "#activeContainer" ).append( '<li><a href="javascript:void(0);" onclick="setActiveFacet(\'' + data["@search.facets"].active[item].value + '\');">' + data["@search.facets"].active[item].value + ' (' + data["@search.facets"].active[item].count + ')</a></li>' );
+					}
+				}
+
 				var hasTransportation = '';
 				for (var item in data["@search.facets"].hasTransportation)
 				{
 					if (hasTransportationFacet != data["@search.facets"].hasTransportation[item].value) {
 						$( "#hasTransportationContainer" ).append( '<li><a href="javascript:void(0);" onclick="setHasTransportationFacet(\'' + data["@search.facets"].hasTransportation[item].value + '\');">' + data["@search.facets"].hasTransportation[item].value + ' (' + data["@search.facets"].hasTransportation[item].count + ')</a></li>' );
+					}
+				}
+
+				var numbers = '';
+				for (var item in data["@search.facets"].numbers)
+				{
+					if (numbersFacet != data["@search.facets"].numbers[item].value) {
+						$( "#numbersContainer" ).append( '<li><a href="javascript:void(0);" onclick="setNumbersFacet(\'' + data["@search.facets"].numbers[item].value + '\');">' + data["@search.facets"].numbers[item].value + ' (' + data["@search.facets"].numbers[item].count + ')</a></li>' );
+					}
+				}
+
+				var qualifications = '';
+				for (var item in data["@search.facets"].qualifications)
+				{
+					if (qualificationsFacet != data["@search.facets"].qualifications[item].value) {
+						$( "#qualificationsContainer" ).append( '<li><a href="javascript:void(0);" onclick="setQualificationsFacet(\'' + data["@search.facets"].qualifications[item].value + '\');">' + data["@search.facets"].qualifications[item].value + ' (' + data["@search.facets"].qualifications[item].count + ')</a></li>' );
 					}
 				}
 
@@ -217,9 +259,38 @@ function execSearch()
 	}	
 }
 
-function setActiveFacet(facet)
-{
-	// User clicked on a subject facet
+function setLastModifiedByFacet(facet) {
+	// User clicked on a lastModifiedBy facet
+	lastModifedByFacet = facet;
+	if (facet != '')
+		$("#currentLastModifedBy").html(facet + '<a href="javascript:void(0);" onclick="setLastModifiedByFacet(\'\');"> [X]</a>');
+	else
+		$("#currentLastModifedBy").html('');
+	execSearch();
+}
+
+function setCreatedByFacet(facet) {
+	// User clicked on a createdBy facet
+	createdByFacet = facet;
+	if (facet != '')
+		$("#currentCreatedBy").html(facet + '<a href="javascript:void(0);" onclick="setCreatedByFacet(\'\');"> [X]</a>');
+	else
+		$("#currentCreatedBy").html('');
+	execSearch();
+}
+
+function setCountryOfOriginFacet(facet) {
+	// User clicked on a countryOfOrigin facet
+	countryOfOriginFacet = facet;
+	if (facet != '')
+		$("#currentCountryOfOrigin").html(facet + '<a href="javascript:void(0);" onclick="setCountryOfOriginFacet(\'\');"> [X]</a>');
+	else
+		$("#currentCountryOfOrigin").html('');
+	execSearch();
+}
+
+function setActiveFacet(facet) {
+	// User clicked on a active facet
 	activeFacet = facet;
 	if (facet != '')
 		$("#currentActive").html(facet + '<a href="javascript:void(0);" onclick="setActiveFacet(\'\');"> [X]</a>');
@@ -228,47 +299,33 @@ function setActiveFacet(facet)
 	execSearch();
 }
 
-function setLastModifiedByFacet(facet)
-{
-	// User clicked on a subject facet
-	lastModifedByFacet=facet;
-	if (facet != '')
-		$("#currentLastModifedBy").html(facet + '<a href="javascript:void(0);" onclick="setLastModifedByFacet(\'\');"> [X]</a>');
-	else
-		$("#currentLastModifedBy").html('');
-	execSearch();
-}
-
-function setCreatedByFacet(facet)
-{
-	// User clicked on a subject facet
-	createdByFacet=facet;
-	if (facet != '')
-		$("#currentCreatedBy").html(facet + '<a href="javascript:void(0);" onclick="setCreatedByFacet(\'\');"> [X]</a>');
-	else
-		$("#currentCreatedBy").html('');
-	execSearch();
-}
-
-function setCountryOfOriginFacet(facet)
-{
-	// User clicked on a subject facet
-	countryOfOriginFacet=facet;
-	if (facet != '')
-		$("#currentCountryOfOrigin").html(facet + '<a href="javascript:void(0);" onclick="setCountryOfOriginFacet(\'\');"> [X]</a>');
-	else
-		$("#currentCountryOfOrigin").html('');
-	execSearch();
-}
-
-function setHasTransportationFacet(facet)
-{
-	// User clicked on a subject facet
-	hasTransportationFacet=facet;
+function setHasTransportationFacet(facet) {
+	// User clicked on a hasTransportation facet
+	hasTransportationFacet = facet;
 	if (facet != '')
 		$("#currentHasTransportation").html(facet + '<a href="javascript:void(0);" onclick="setHasTransportationFacet(\'\');"> [X]</a>');
 	else
 		$("#currentHasTransportation").html('');
+	execSearch();
+}
+
+function setNumbersFacet(facet) {
+	// User clicked on a numbers facet
+	numbersFacet = facet;
+	if (facet != '')
+		$("#currentNumbers").html(facet + '<a href="javascript:void(0);" onclick="setNumbersFacet(\'\');"> [X]</a>');
+	else
+		$("#currentNumbers").html('');
+	execSearch();
+}
+
+function setQualificationsFacet(facet) {
+	// User clicked on a qualifications facet
+	qualificationsFacet = facet;
+	if (facet != '')
+		$("#currentQualifications").html(facet + '<a href="javascript:void(0);" onclick="setQualificationsFacet(\'\');"> [X]</a>');
+	else
+		$("#currentQualifications").html('');
 	execSearch();
 }
 
